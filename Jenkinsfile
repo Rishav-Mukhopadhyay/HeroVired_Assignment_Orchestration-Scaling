@@ -8,14 +8,14 @@ pipeline {
         REGISTRY       = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         IMAGE_TAG      = "${BUILD_NUMBER}"   // Jenkins counts builds: 1, 2, 3...
 
-        // Frontend URLs are baked in at build time.
-        // TEMPORARY: localhost values. We will change these in Step 5 (EKS).
-        REACT_APP_AUTH_API_URL         = 'http://localhost:3001/api'
-        REACT_APP_STREAMING_API_URL    = 'http://localhost:3002/api'
-        REACT_APP_STREAMING_PUBLIC_URL = 'http://localhost:3002'
-        REACT_APP_ADMIN_API_URL        = 'http://localhost:3003/api/admin'
-        REACT_APP_CHAT_API_URL         = 'http://localhost:3004/api/chat'
-        REACT_APP_CHAT_SOCKET_URL      = 'http://localhost:3004'
+        // Frontend uses relative URLs; nginx (frontend/nginx.conf) forwards /api/... to the backends
+        REACT_APP_AUTH_API_URL         = '/api'
+        REACT_APP_STREAMING_API_URL    = '/api'
+        REACT_APP_STREAMING_PUBLIC_URL = '/'
+        REACT_APP_ADMIN_API_URL        = '/api/admin'
+        REACT_APP_CHAT_API_URL         = '/api/chat'
+        REACT_APP_CHAT_SOCKET_URL      = '/'
+
     }
 
     stages {

@@ -1,0 +1,31 @@
+# EKS cluster definition for StreamingApp
+# Create:  eksctl create cluster -f infra/eks-cluster.yaml
+# Delete:  eksctl delete cluster -f infra/eks-cluster.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: streamingapp-eks
+  region: ap-south-1
+  tags:
+    project: streamingapp
+    owner: rishav
+
+iam:
+  withOIDC: true      # lets individual add-ons get their own AWS permissions (needed by the EBS add-on)
+
+addons:
+  - name: aws-ebs-csi-driver   # lets Kubernetes create EBS disks, so MongoDB data survives pod restarts
+
+managedNodeGroups:
+  - name: ng-general
+    instanceType: t3.medium
+    desiredCapacity: 2         # start with 2 servers
+    minSize: 1
+    maxSize: 3                 # room to grow
+    volumeSize: 20             # GB of disk per server
+    labels:
+      role: general
+    iam:
+      withAddonPolicies:
+        cloudWatch: true       # allows sending metrics/logs to CloudWatch (Step 6)
