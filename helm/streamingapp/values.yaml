@@ -1,0 +1,62 @@
+# Default settings for the StreamingApp chart.
+# Any value can be overridden at install time with: --set key=value
+
+image:
+  registry: 722867460821.dkr.ecr.ap-south-1.amazonaws.com
+  tag: latest            # later: the Jenkins build number, e.g. "3"
+  pullPolicy: Always
+
+# The app's public address (the LoadBalancer URL). Empty on first install;
+# set it with --set publicUrl=http://<address> once AWS gives us the address.
+publicUrl: ""
+
+# Shared secret used to sign and check login tokens (JWT).
+# NEVER commit a real value here: pass it at install time with --set jwtSecret=...
+jwtSecret: ""
+
+aws:
+  region: ap-south-1
+  s3Bucket: ""
+
+mongo:
+  image: mongo:6
+  database: streamingapp
+  storage: 5Gi
+
+backends:
+  auth:
+    port: 3001
+    healthPath: /health
+    autoscale: true
+  streaming:
+    port: 3002
+    healthPath: /api/health
+    autoscale: true
+  admin:
+    port: 3003
+    healthPath: /api/health
+    autoscale: false
+    replicas: 1
+  chat:
+    port: 3004
+    healthPath: /api/health
+    autoscale: false     # live chat keeps connections in memory, so it must stay at 1 copy
+    replicas: 1
+
+frontend:
+  autoscale: true
+  replicas: 2
+
+# CPU/memory each container asks for (requests) and may not exceed (limits)
+resources:
+  requests:
+    cpu: 100m        # 100m = 0.1 of a CPU core
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPU: 60      # add pods when average CPU goes above 60% of the request

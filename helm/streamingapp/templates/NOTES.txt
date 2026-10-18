@@ -1,0 +1,10 @@
+StreamingApp has been deployed!
+
+1. Get the public address (takes 2-3 minutes to appear under EXTERNAL-IP):
+     kubectl get svc frontend
+
+2. Tell the backends their public address (needed for login/CORS):
+     helm upgrade streamingapp ./helm/streamingapp --reuse-values --set publicUrl=http://<EXTERNAL-IP>
+
+3. Watch everything start:
+     kubectl get pods -w

@@ -1,0 +1,21 @@
+# Settings shared by all backend services (not secret)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: streamingapp-config
+data:
+  NODE_ENV: "production"
+  MONGO_URI: "mongodb://mongo:27017/{{ .Values.mongo.database }}"
+  CLIENT_URLS: {{ .Values.publicUrl | quote }}
+  STREAMING_PUBLIC_URL: {{ .Values.publicUrl | quote }}
+  AWS_REGION: {{ .Values.aws.region | quote }}
+  AWS_S3_BUCKET: {{ .Values.aws.s3Bucket | quote }}
+---
+# Secret shared by all backend services
+apiVersion: v1
+kind: Secret
+metadata:
+  name: streamingapp-secret
+type: Opaque
+stringData:
+  JWT_SECRET: {{ required "Set the JWT secret with --set jwtSecret=..." .Values.jwtSecret | quote }}

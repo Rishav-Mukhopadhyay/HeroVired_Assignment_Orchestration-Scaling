@@ -1,3 +1,12 @@
+// Posts a message to the SNS topic -> Slack (via Amazon Q Developer) + email.
+// The JSON uses the "custom notification" format that Amazon Q Developer understands.
+def notifySns(String status) {
+    sh """
+        aws sns publish --region ${env.AWS_REGION} --topic-arn ${env.SNS_TOPIC_ARN} \
+          --message '{"version":"1.0","source":"custom","content":{"textType":"client-markdown","title":"${status}: ${env.JOB_NAME} #${env.BUILD_NUMBER}","description":"Image tag: ${env.IMAGE_TAG}\\nDetails: ${env.BUILD_URL}"}}'
+    """
+}
+
 pipeline {
     agent any    // run on the Jenkins server itself
 
@@ -7,6 +16,7 @@ pipeline {
         AWS_ACCOUNT_ID = '722867460821'
         REGISTRY       = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         IMAGE_TAG      = "${BUILD_NUMBER}"   // Jenkins counts builds: 1, 2, 3...
+        SNS_TOPIC_ARN  = "arn:aws:sns:${AWS_REGION}:${AWS_ACCOUNT_ID}:streamingapp-alerts"
 
         // Frontend uses relative URLs; nginx (frontend/nginx.conf) forwards /api/... to the backends
         REACT_APP_AUTH_API_URL         = '/api'
@@ -71,7 +81,13 @@ pipeline {
         always {
             sh 'docker image prune -f'   // delete leftover images so the disk doesn't fill up
         }
-        success { echo "✅ Build ${BUILD_NUMBER}: all 5 images pushed to ECR" }
-        failure { echo "❌ Build ${BUILD_NUMBER} failed. Check the stage that turned red." }
+        success {
+            echo "✅ Build ${BUILD_NUMBER}: all 5 images pushed to ECR"
+            notifySns('✅ BUILD SUCCEEDED')
+        }
+        failure {
+            echo "❌ Build ${BUILD_NUMBER} failed. Check the stage that turned red."
+            notifySns('❌ BUILD FAILED')
+        }
     }
 }
